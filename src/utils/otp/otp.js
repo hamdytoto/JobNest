@@ -6,9 +6,7 @@ function generateSecureOTP() {
 		length: 6,
 		charset: "alphanumeric",
 	});
-	const isEncrypted = false;
-	if (!isEncrypted) return otp;
-	return encrypt({ plainText: otp });
+	return otp;
 }
 
 export default generateSecureOTP;

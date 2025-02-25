@@ -7,7 +7,12 @@ const userSchema = new Schema(
 		firstName: { type: String, required: true },
 		lastName: { type: String, required: true },
 		email: { type: String, required: true, unique: true, lowercase: true },
-		password: { type: String, required: true },
+		password: {
+			type: String,
+			required: function () {
+				return this.provider == providers.system ? true : false;
+			},
+		},
 		provider: {
 			type: String,
 			enum: Object.values(providers),
@@ -32,7 +37,7 @@ const userSchema = new Schema(
 		deletedAt: { type: Date, default: null },
 		bannedAt: { type: Date, default: null },
 		updatedBy: {
-			type: Schema.Types.ObjectId,
+			type: Types.ObjectId,
 			ref: "User",
 			default: null,
 		},

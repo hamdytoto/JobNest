@@ -10,6 +10,7 @@ import {
 import { compareHash, hash } from "../../utils/hashing/hash.js";
 import { generateToken } from "../../utils/token/token.js";
 import generateSecureOTP from "../../utils/otp/otp.js";
+import { isvalidObjectId } from "../../middlewares/validation.middleware.js";
 
 export const register = asyncHandler(async (req, res, next) => {
 	const { email } = req.body;
@@ -21,9 +22,10 @@ export const register = asyncHandler(async (req, res, next) => {
 	const user = await User.create({
 		...req.body,
 	});
-	emailEmitter.emit("sendOtp", email, generateSecureOTP(), user.username);
+	const createdOtp = generateSecureOTP();
+	emailEmitter.emit("sendOtp", email, createdOtp, user.username);
 	user.OTP.push({
-		code: hash({ plainText: generateSecureOTP() }),
+		code: hash({ plainText: createdOtp }),
 		type: otpTypes.confirmEmail,
 		expiresIn: new Date(Date.now() + 10 * 60 * 1000),
 	});
@@ -34,98 +36,107 @@ export const register = asyncHandler(async (req, res, next) => {
 
 export const confirmOtp = asyncHandler(async (req, res, next) => {
 	const { email, otp } = req.body;
+	// check for user existence
 	const user = await User.findOne({ email });
-	if (!user) return new Error("user Not Found", { cause: 400 });
+	if (!user) return next(new Error("user Not Found", { cause: 400 }));
+	// filtering based on otpType and sorting based on expireIn to get the latest one
 	const savedOtp = user.OTP.filter(
 		(ele) => ele.type == otpTypes.confirmEmail
 	).sort((a, b) => b.expiresIn - a.expiresIn)[0];
-	if (!savedOtp) return new Error("OTP Not Found", { cause: 400 });
+
+	if (!savedOtp) return next(new Error("OTP Not Found", { cause: 400 }));
+
 	if (savedOtp.expiresIn < new Date())
-		return new Error("Otp has been expired", { cause: 400 });
+		return next(new Error("Otp has been expired", { cause: 400 }));
+
 	const isValid = compareHash({ plainText: otp, hashText: savedOtp.code });
-	if (!isValid) return new Error("Not Correct OTP");
+	if (!isValid) return next(new Error("Not Correct OTP", { cause: 400 }));
+
 	user.isConfirmed = true;
 	await user.save();
-	return res.status(200).json({ success: true, results: user });
+	return res.json({ success: true, results: user });
 });
 
-// export const login = async (req, res, next) => {
-// 	const { email, password } = req.body;
-// 	// check user existance
-// 	const user = await User.findOne({ email });
-// 	if (!user) {
-// 		return next(new Error("User not found", { cause: 404 }));
-// 	}
+export const login = async (req, res, next) => {
+	const { email, password } = req.body;
+	// check user existance
+	const user = await User.findOne({ email });
+	if (!user) {
+		return next(new Error("User not found", { cause: 404 }));
+	}
 
-// 	if (!user.isAcctivated) {
-// 		return next(new Error("Account not activated", { cause: 400 }));
-// 	}
-// 	// check password
-// 	// verify
-// 	if (!compareHash({ plainText: password, hashText: user.password })) {
-// 		return next(new Error("Wrong password", { cause: 400 }));
-// 	}
-// 	user.isLoggedIn = true;
-// 	user.freeze = false;
-// 	await user.save();
-// 	return res.status(200).json({
-// 		success: "login success",
-// 		access_token: generateToken({
-// 			payload: {
-// 				id: user._id,
-// 				email: user.email,
-// 			},
-// 			options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE || "1d" },
-// 		}),
-// 		refresh_token: generateToken({
-// 			payload: {
-// 				id: user._id,
-// 				email: user.email,
-// 			},
-// 			options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE || "7d" },
-// 		}),
-// 	});
-// };
+	if (!user.isConfirmed) {
+		return next(new Error("Account not activated", { cause: 400 }));
+	}
+	// verify
+	if (!compareHash({ plainText: password, hashText: user.password })) {
+		return next(new Error("Wrong password", { cause: 400 }));
+	}
+	await user.save();
+	return res.status(200).json({
+		success: "login success",
+		access_token: generateToken({
+			payload: {
+				id: user._id,
+				email: user.email,
+			},
+			options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE || "1d" },
+		}),
+		refresh_token: generateToken({
+			payload: {
+				id: user._id,
+				email: user.email,
+			},
+			options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE || "7d" },
+		}),
+	});
+};
 
-// export const loginWithGoogle = async (req, res, next) => {
-// 	const { idToken } = req.body;
-// 	const client = new OAuth2Client();
-// 	async function verify() {
-// 		const ticket = await client.verifyIdToken({
-// 			idToken,
-// 			audience: process.env.CLIENT_ID,
-// 		});
-// 		const payload = ticket.getPayload();
-// 		return payload;
-// 	}
-// 	const userData = await verify();
-// 	const { email_verified, email, name, picture } = userData;
-// 	if (!email_verified)
-// 		return next(new Error("Email not Valid", { cause: 400 }));
-// 	const user = await User.create({
-// 		email,
-// 		userName: name,
-// 		profilePic: picture,
-// 		isAcctivated: true,
-// 		provider: provdiers.google,
-// 	});
-// 	const access_token = generateToken({
-// 		payload: {
-// 			id: user._id,
-// 			email: user.email,
-// 		},
-// 		options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE || "1d" },
-// 	});
-// 	const refresh_token = generateToken({
-// 		payload: { id: user._id, email: user.email },
-// 		options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE || "7d" },
-// 	});
-// 	return res.status(200).json({
-// 		success: "login success",
-// 		access_token,
-// 		refresh_token,
-// 	});
-// };
+export const loginWithGoogle = async (req, res, next) => {
+	const { idToken } = req.body;
+	const client = new OAuth2Client();
+	async function verify() {
+		const ticket = await client.verifyIdToken({
+			idToken,
+			audience: process.env.CLIENT_ID,
+		});
+		const payload = ticket.getPayload();
+		return payload;
+	}
+	const userData = await verify();
+	const { email_verified, email, name, picture } = userData;
+	if (!email_verified)
+		return next(new Error("Email not Valid", { cause: 400 }));
+	let user = await User.findOne({ email });
+	if (!userTest) {
+		user = await User.create({
+			email,
+			userName: name,
+			profilePic: {
+				secure_url: picture,
+			},
+			isConfirmed: true,
+			provider: providers.google,
+		});
+	}
+	const access_token = generateToken({
+		payload: {
+			id: user._id,
+			email: user.email,
+		},
+		options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE || "1d" },
+	});
+	const refresh_token = generateToken({
+		payload: { id: user._id, email: user.email },
+		options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE || "7d" },
+	});
+
+	return res.status(200).json({
+		success: "login success",
+		access_token,
+		refresh_token,
+	});
+};
 
 // export const sendOtp = async (req, res, next) => {
 // 	const { email } = req.body;

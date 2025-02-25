@@ -9,23 +9,25 @@ router.post(
 	validation(authValidation.register),
 	authService.register
 );
-router.patch(
+router.post(
 	"/confirm_otp",
-	() => {
-		console.log("I'm here");
-	},
 	validation(authValidation.confirmOtp),
 	authService.confirmOtp
 );
-// // login
-// router.post("/login", asyncHandler(authService.login));
 
-// // login with gmail
-// router.post(
-// 	"/loginWithGmail",
-// 	validation(authValidation.loginWithGmail),
-// 	asyncHandler(authService.loginWithGmail)
-// );
+// login
+router.post(
+	"/login_system",
+	validation(authValidation.login),
+	authService.login
+);
+
+// login with gmail
+router.post(
+	"/login_google",
+	validation(authValidation.loginWithGmail),
+	asyncHandler(authService.loginWithGoogle)
+);
 
 // router.post(
 // 	"/forgetPassword",
