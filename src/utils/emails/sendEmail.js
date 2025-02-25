@@ -23,15 +23,12 @@ const sendEmail = async ({ to, subject, html }) => {
 		}
 	});
 	const info = await transporter.sendMail({
-		from: `"social app" <${process.env.EMAIL}>`,
+		from: `"${process.env.SENDER_NAME}" <${process.env.EMAIL}>`,
 		to,
 		subject,
-		// text:"test text form nodemailer"
 		html,
 	});
 
 	return info.rejected.length == 0 ? true : false;
-	// console.log(info);
 };
 export default sendEmail;
-// sendEmail();

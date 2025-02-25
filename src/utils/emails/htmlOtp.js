@@ -14,7 +14,8 @@ export const otpForm = (otp ,userName) => {
         <tr>
             <td style="padding: 30px 20px; text-align: center; background-color: #4caf50; border-radius: 10px 10px 0 0;">
                 <h1 style="margin: 0; color: #ffffff; font-size: 24px;">OTP Verification</h1>
-                <h2 style="margin: 0; color: #ffffff; font-size: 24px;">Hi${userName}</h2>
+                <br>
+                <h3 style="margin: 0; color: #ffffff; font-size: 24px;"> Hi ${userName}</h3>
             </td>
         </tr>
         <!-- Content -->

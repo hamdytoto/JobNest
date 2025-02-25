@@ -22,11 +22,11 @@ emailEmitter.on("verifyEmail", async (email, link, userName) => {
 		html: changeEmail(link, userName),
 	});
 });
-emailEmitter.on("sendOtp", async (email, otp) => {
+emailEmitter.on("sendOtp", async (email, otp,userName) => {
 	await sendEmail({
 		to: email,
 		subject: subjects.register,
-		html: otpForm(otp),
+		html: otpForm(otp, userName),
 	});
 });
 export const resetPasswordEmitter = new EventEmitter();

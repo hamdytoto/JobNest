@@ -11,6 +11,6 @@ export const roles = {
 	user: "User",
 };
 export const otpTypes = {
-	registration: "Registration",
-	forgotPassword: "Forgot Password",
+	confirmEmail: "confrimEmail",
+	forgotPassword: "forgotPassword",
 };

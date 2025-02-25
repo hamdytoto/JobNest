@@ -1,13 +1,13 @@
 import User from "./../../DB/models/user.model.js";
-import  {asyncHandler} from "../../utils/errors/asyncHandler.js";
-import {providers} from "./../../DB/models/eumsValues/user.enum.js";
+import { asyncHandler } from "../../utils/errors/asyncHandler.js";
+import { otpTypes, providers } from "./../../DB/models/eumsValues/user.enum.js";
 import { verifyToken } from "../../utils/token/token.js";
 import { OAuth2Client } from "google-auth-library";
 import {
 	emailEmitter,
 	resetPasswordEmitter,
 } from "../../utils/emails/email.event.js";
-import {compareHash } from "../../utils/hashing/hash.js";
+import { compareHash, hash } from "../../utils/hashing/hash.js";
 import { generateToken } from "../../utils/token/token.js";
 import generateSecureOTP from "../../utils/otp/otp.js";
 
@@ -19,12 +19,33 @@ export const register = asyncHandler(async (req, res, next) => {
 	}
 	// create user
 	const user = await User.create({
-		...req.body
+		...req.body,
 	});
-	console.log(user)
-	emailEmitter.emit("sendOtp", email, generateSecureOTP(),user.username);
-	
+	emailEmitter.emit("sendOtp", email, generateSecureOTP(), user.username);
+	user.OTP.push({
+		code: hash({ plainText: generateSecureOTP() }),
+		type: otpTypes.confirmEmail,
+		expiresIn: new Date(Date.now() + 10 * 60 * 1000),
+	});
+	await user.save();
 
+	return res.status(200).json({ success: true, results: user });
+});
+
+export const confirmOtp = asyncHandler(async (req, res, next) => {
+	const { email, otp } = req.body;
+	const user = await User.findOne({ email });
+	if (!user) return new Error("user Not Found", { cause: 400 });
+	const savedOtp = user.OTP.filter(
+		(ele) => ele.type == otpTypes.confirmEmail
+	).sort((a, b) => b.expiresIn - a.expiresIn)[0];
+	if (!savedOtp) return new Error("OTP Not Found", { cause: 400 });
+	if (savedOtp.expiresIn < new Date())
+		return new Error("Otp has been expired", { cause: 400 });
+	const isValid = compareHash({ plainText: otp, hashText: savedOtp.code });
+	if (!isValid) return new Error("Not Correct OTP");
+	user.isConfirmed = true;
+	await user.save();
 	return res.status(200).json({ success: true, results: user });
 });
 

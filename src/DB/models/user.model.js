@@ -53,7 +53,7 @@ const userSchema = new Schema(
 			},
 		],
 	},
-	{ timestamps: true }
+	{ timestamps: true, toJSon: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Virtual field for username
@@ -62,12 +62,12 @@ userSchema.virtual("username").get(function () {
 });
 
 // Hash password before saving
-userSchema.pre("save",  function (next) {
+userSchema.pre("save", function (next) {
 	if (this.isModified("password")) {
-		this.password =  hash({ plainText: this.password });
+		this.password = hash({ plainText: this.password });
 	}
 	if (this.isModified("mobileNumber")) {
-		this.mobileNumber =  encrypt({ plainText: this.mobileNumber });
+		this.mobileNumber = encrypt({ plainText: this.mobileNumber });
 	}
 	return next();
 });

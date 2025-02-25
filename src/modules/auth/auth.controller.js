@@ -9,12 +9,14 @@ router.post(
 	validation(authValidation.register),
 	authService.register
 );
-// // register
-// router.post(
-// 	"/register",
-// 	validation(authValidation.register),
-// 	asyncHandler(authService.register)
-// );
+router.patch(
+	"/confirm_otp",
+	() => {
+		console.log("I'm here");
+	},
+	validation(authValidation.confirmOtp),
+	authService.confirmOtp
+);
 // // login
 // router.post("/login", asyncHandler(authService.login));
 
