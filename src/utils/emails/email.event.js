@@ -30,10 +30,10 @@ emailEmitter.on("sendOtp", async (email, otp) => {
 	});
 });
 export const resetPasswordEmitter = new EventEmitter();
-resetPasswordEmitter.on("sendOtp", async (email, otp) => {
+resetPasswordEmitter.on("sendOtp", async (email, otp, userName) => {
 	await sendEmail({
 		to: email,
 		subject: subjects.resetPassword,
-		html: otpForm(otp),
+		html: otpForm(otp, userName),
 	});
 });

@@ -1,6 +1,7 @@
 import { Schema, Types, model } from "mongoose";
-import bcrypt, { hash } from "../../utils/hashing/hash.js";
+import { hash } from "../../utils/hashing/hash.js";
 import { providers, genders, roles, otpTypes } from "./eumsValues/user.enum.js";
+import { encrypt } from "../../utils/encryption/encryption.js";
 const userSchema = new Schema(
 	{
 		firstName: { type: String, required: true },
@@ -64,6 +65,9 @@ userSchema.virtual("username").get(function () {
 userSchema.pre("save",  function (next) {
 	if (this.isModified("password")) {
 		this.password =  hash({ plainText: this.password });
+	}
+	if (this.isModified("mobileNumber")) {
+		this.mobileNumber =  encrypt({ plainText: this.mobileNumber });
 	}
 	return next();
 });

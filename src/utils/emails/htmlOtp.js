@@ -1,11 +1,11 @@
-export const otpForm = (otp) => {
+export const otpForm = (otp ,userName) => {
 	return `
         <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification</title>
+    <title>OTP Verification (JobNest)</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f0fff4;">
     <!-- Main Container -->
@@ -14,6 +14,7 @@ export const otpForm = (otp) => {
         <tr>
             <td style="padding: 30px 20px; text-align: center; background-color: #4caf50; border-radius: 10px 10px 0 0;">
                 <h1 style="margin: 0; color: #ffffff; font-size: 24px;">OTP Verification</h1>
+                <h2 style="margin: 0; color: #ffffff; font-size: 24px;">Hi${userName}</h2>
             </td>
         </tr>
         <!-- Content -->
