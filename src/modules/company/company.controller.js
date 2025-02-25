@@ -1,11 +1,11 @@
 import { Router } from "express";
-import isAuthenticated from "./../../middlewares/auth.middleware.js";
+import isAuthenticated from "../../middlewares/auth.middleware.js";
 import isAuthrized from "../../middlewares/authrazation.middleware.js";
-import * as commentServices from "./comment.services.js";
-import * as commentValidation from "./comment.validation.js";
+import * as commentServices from "./company.services.js";
+import * as commentValidation from "./company.validation.js";
 import { cloudUpload } from "../../utils/fileUploading/cloud.multer.js";
 import validation from "../../middlewares/validation.middleware.js";
-import commentEndPoint from "./comment.endpoint.js";
+import commentEndPoint from "./company.endpoint.js";
 const router = Router({ mergeParams: true });
 router.post(
 	"/",

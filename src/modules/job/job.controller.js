@@ -3,8 +3,8 @@ import isAuthenticated from "../../middlewares/auth.middleware.js";
 import isAuthrized from "../../middlewares/authrazation.middleware.js";
 import endPoints from "../post/post.endPoints.js";
 import { cloudUpload } from "../../utils/fileUploading/cloud.multer.js";
-import * as postServices from "./post.services.js";
-import * as postValidation from "./post.validation.js";
+import * as postServices from "./job.services.js";
+import * as postValidation from "./job.validation.js";
 import validation from "../../middlewares/validation.middleware.js";
 import commentRouter from "../comment/comment.controller.js";
 

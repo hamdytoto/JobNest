@@ -2,7 +2,7 @@ import joi from "joi";
 import {
 	fileObject,
 	isvalidObjectId,
-} from "./../../middlewares/validation.middleware.js";
+} from "../../middlewares/validation.middleware.js";
 export const createComment = joi
 	.object({
 		postId: joi.custom(isvalidObjectId).required(),
