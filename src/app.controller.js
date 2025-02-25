@@ -4,3 +4,4 @@ const bootstrap = async(app,express) =>{
     await connectDB();
     app.use(morgan("dev"));
 }
+export default bootstrap
