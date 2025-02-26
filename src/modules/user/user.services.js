@@ -1,18 +1,11 @@
 import { asyncHandler } from "../../utils/errors/asyncHandler.js";
-import { decrypt, encrypt } from "../../utils/encryption/encryption.js";
+import {  encrypt } from "../../utils/encryption/encryption.js";
 import { compareHash, hash } from "../../utils/hashing/hash.js";
-import {
-	resetPasswordEmitter,
-	emailEmitter,
-} from "../../utils/emails/email.event.js";
-import generateSecureOTP from "../../utils/otp/otp.js";
 import User from "../../DB/models/user.model.js";
-import { generateToken, verifyToken } from "../../utils/token/token.js";
-import path from "path";
-import fs from "fs";
 import cloudinary from "../../utils/fileUploading/cloudinary.config.js";
 import { roles } from "../../DB/models/eumsValues/user.enum.js";
-
+import defaultImages from "../../utils/fileUploading/defaultImages.js";
+const { profileImage, coverImage } = defaultImages;
 // using  mongoose hooks in user model to decrypt mobileNumber
 export const profile = asyncHandler(async (req, res, next) => {
 	const { _id } = req.user;
@@ -69,7 +62,6 @@ export const profileUser = asyncHandler(async (req, res, next) => {
 	});
 });
 
-
 // update password
 export const updatePassword = asyncHandler(async (req, res, next) => {
 	const { _id } = req.user;
@@ -86,6 +78,67 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
 		.json({ success: true, message: "Password updated successfully" });
 });
 
+export const ProfilePictureCloud = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.user._id);
+	console.log(req.file.path);
+	const { secure_url, public_id } = await cloudinary.uploader.upload(
+		req.file.path,
+		{
+			folder: `${process.env.CLOUD_FOLDER}/users/${user._id}/profilePics`,
+		}
+	);
+	user.profilePic = { secure_url, public_id };
+	await user.save();
+	return res.json({
+		success: true,
+		result: "Profile picture uploaded successfully",
+	});
+});
+export const coverPictureCloud = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.user._id);
+	console.log(req.file.path);
+	const { secure_url, public_id } = await cloudinary.uploader.upload(
+		req.file.path,
+		{
+			folder: `${process.env.CLOUD_FOLDER}/users/${user._id}/coverPics`,
+		}
+	);
+	user.coverPic = { secure_url, public_id };
+	await user.save();
+	return res.json({
+		success: true,
+		result: "Cover picture uploaded successfully",
+	});
+});
+
+export const delProfilePicCloud = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.user._id);
+	const results = await cloudinary.uploader.destroy(user.profilePic.public_id);
+	if (results.result == "ok") {
+		user.profilePic = {
+			public_id: profileImage.defaultPublicId,
+			secure_url: profileImage.defaultUrl,
+		};
+		await user.save();
+	}
+	
+	return res.json({ sucess: true, results, user });
+});
+export const delCoverPicCloud = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.user._id);
+	const results = await cloudinary.uploader.destroy(user.coverPic.public_id);
+	if (results.result == "not found") return next(new Error("Image not found"));
+	if (results.result == "ok") {
+		user.coverPic = {
+			public_id: coverImage.defaultPublicId,
+			secure_url: coverImage.defaultUrl,
+		};
+		await user.save();
+	}
+	
+	return res.json({ sucess: true, results });
+});
+
 // deactive account (soft delete)
 export const deactiveAccount = asyncHandler(async (req, res, next) => {
 	const { _id } = req.user;
@@ -94,70 +147,11 @@ export const deactiveAccount = asyncHandler(async (req, res, next) => {
 	if (!compareHash({ plainText: password, hashText: user.password })) {
 		return next(new Error("invalid password", { cause: 400 }));
 	}
-	user.freeze = true;
-	user.isLoggedIn = false;
-	await user.save();
-	return res
-		.status(200)
-		.json({ success: true, message: "Account deactive successfully" });
-});
-
-
-
-export const ProfilePicture = asyncHandler(async (req, res, next) => {
-	const user = await User.findByIdAndUpdate(
-		req.user._id,
-		{
-			profilePicture: req.file.path,
-		},
-		{ new: true }
-	);
-	return res.status(200).json({ success: true, result: user });
-});
-export const ProfilePictureCloud = asyncHandler(async (req, res, next) => {
-	const user = await User.findById(req.user._id);
-	const { secure_url, public_id } = await cloudinary.uploader.upload(
-		req.file.path,
-		{
-			folder: `users/${user._id}/profilePics`,
-		}
-	);
-	user.profilePicCloud = { secure_url, public_id };
-	await user.save();
-	return res.json({ success: true, result: { user } });
-});
-
-export const Coverpicture = asyncHandler(async (req, res, next) => {
-	let images = [];
-	for (const file of req.files) {
-		images.push(file.path);
+	if (user.deletedAt) {
+		return next(new Error("User is already deleted", { cause: 400 }));
 	}
-	const user = await User.findById(req.user._id);
-	user.coverPictures = images;
+	user.deletedAt = new Date();
 	await user.save();
 
-	res.status(200).json({ success: true, result: user });
-});
-export const delProfilePic = asyncHandler(async (req, res, next) => {
-	const user = await User.findById(req.user._id);
-	const imagePath = path.resolve(".", user.profilePicture);
-	fs.unlinkSync(imagePath);
-	user.profilePicture = defaultProfilePic;
-	await user.save();
-	return res.json({ sucess: true, results: user });
-});
-export const delProfilePicCloud = asyncHandler(async (req, res, next) => {
-	const user = await User.findById(req.user._id);
-	const results = await cloudinary.uploader.destroy(
-		user.profilePicCloud.public_id
-	);
-	if (results.result == "ok") {
-		user.profilePicCloud = {
-			public_id: publicIdCloud,
-			secure_url: secureUrlCloud,
-		};
-		await user.save();
-	}
-
-	return res.json({ sucess: true, results, user });
+	res.json({ success: true, message: "User soft deleted successfully." });
 });

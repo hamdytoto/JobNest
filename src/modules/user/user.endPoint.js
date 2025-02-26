@@ -4,7 +4,7 @@ const endPoints={
     profileUser:[roles.user,roles.admin],
     updateProfile:[roles.user],
     updatePassword:[roles.user],
-    deactiveAccount:[roles.user,roles.admin],
+    deactiveAccount:[roles.user], // as the user can deactive his account
 }
 
 export default endPoints;

@@ -45,52 +45,45 @@ router.patch(
 	validation(userValidation.updatePassword),
 	userServices.updatePassword
 );
-// deactive account
-router.delete(
-	"/deactiveAccount",
-	isAuthenticated,
-	isAuthrized(...endPoints.deactiveAccount),
-	validation(userValidation.deactiveAccount),
-	userServices.deactiveAccount
-);
+
+
 
 
 // add profile picture
 router.post(
-	"/Profile-picture",
-	isAuthenticated,
-	upload(fileValidation.images, folderNames.profilePics).single("image"), // return middleware
-	userServices.ProfilePicture
-);
-router.post(
-	"/Profile-pic-cloud",
+	"/upload_profile_pic",
 	isAuthenticated,
 	cloudUpload().single("image"), // return middleware
 	userServices.ProfilePictureCloud
 );
-router.delete("/del-profile-pic", isAuthenticated, userServices.delProfilePic);
+// add cover picture
+router.post(
+	"/upload_cover_pic",
+	isAuthenticated,
+	cloudUpload().single("image"), // return middleware
+	userServices.coverPictureCloud
+);
+// delete profile picture
 router.delete(
-	"/del-profilepic-cloud",
+	"/del_profile_pic",
 	isAuthenticated,
 	userServices.delProfilePicCloud
 );
-
-router.post(
-	"/cover-picture",
+// delete cover picture
+router.delete(
+	"/del_cover_pic",
 	isAuthenticated,
-	upload(fileValidation.images, folderNames.coverPics).array("cover-images"),
-	userServices.Coverpicture
+	userServices.delCoverPicCloud
 );
 
-router.post(
-	"/test-field",
+// deactive account
+router.delete(
+	"/softDelete_account",
 	isAuthenticated,
-	upload(fileValidation.images, folderNames.fieldPics).fields([
-		{ name: "babies", maxCount: 2 },
-		{ name: "men", maxCount: 3 },
-	]),
-	(req, res) => {
-		return res.json({ files: req.files });
-	}
-);
+	isAuthrized(...endPoints.deactiveAccount),
+	validation(userValidation.deactiveAccount),
+	userServices.deactiveAccount
+)
+
+
 export default router;
