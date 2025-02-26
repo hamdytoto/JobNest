@@ -1,7 +1,7 @@
 import { Schema, Types, model } from "mongoose";
 import { hash } from "../../utils/hashing/hash.js";
 import { providers, genders, roles, otpTypes } from "./eumsValues/user.enum.js";
-import { encrypt } from "../../utils/encryption/encryption.js";
+import { decrypt, encrypt } from "../../utils/encryption/encryption.js";
 const userSchema = new Schema(
 	{
 		firstName: { type: String, required: true },

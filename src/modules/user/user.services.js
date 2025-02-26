@@ -6,25 +6,18 @@ import {
 	emailEmitter,
 } from "../../utils/emails/email.event.js";
 import generateSecureOTP from "../../utils/otp/otp.js";
-import User, {
-	defaultProfilePic,
-	publicIdCloud,
-	secureUrlCloud,
-} from "../../DB/models/user.model.js";
+import User from "../../DB/models/user.model.js";
 import { generateToken, verifyToken } from "../../utils/token/token.js";
 import path from "path";
 import fs from "fs";
 import cloudinary from "../../utils/fileUploading/cloudinary.config.js";
 
 export const profile = asyncHandler(async (req, res, next) => {
-	// who are you ?
-	// token frontend
 	const { user } = req;
-	// decrpt phone
-	const decryptedPhone = decrypt({ cipherText: user.phone });
+	const decryptedPhone = decrypt({ cipherText: user.mobileNumber });
 	return res
 		.status(200)
-		.json({ success: true, result: { ...user, phone: decryptedPhone } });
+		.json({ success: true, result: { ...user ,mobileNumber: decryptedPhone }  });
 });
 // update profile
 export const updateProfile = asyncHandler(async (req, res, next) => {

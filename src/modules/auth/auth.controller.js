@@ -26,24 +26,24 @@ router.post(
 router.post(
 	"/login_google",
 	validation(authValidation.loginWithGmail),
-	asyncHandler(authService.loginWithGoogle)
+	authService.loginWithGoogle
 );
 
-// router.post(
-// 	"/forgetPassword",
-// 	validation(authValidation.forgetPassword),
-// 	asyncHandler(authService.forgetPassword)
-// );
+router.post(
+	"/forget_password",
+	validation(authValidation.forgetPassword),
+	authService.forgetPassword
+);
 
-// router.post(
-// 	"/resetPassword",
-// 	validation(authValidation.resetPassword),
-// 	asyncHandler(authService.resetPassword)
-// );
+router.post(
+	"/reset_password",
+	validation(authValidation.resetPassword),
+	authService.resetPassword
+);
 
-// router.post(
-// 	"/refreshToken",
-// 	validation(authValidation.refreshToken),
-// 	asyncHandler(authService.refreshToken)
-// );
+router.post(
+	"/refresh_token",
+	validation(authValidation.refreshToken),
+	authService.refreshToken
+);
 export default router;

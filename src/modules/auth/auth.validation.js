@@ -44,8 +44,8 @@ export const resetPassword = joi
 	.object({
 		email: joi.string().email().required(),
 		otp: joi.string().length(6).required(),
-		password: joi.string().required(),
-		confirmPassword: joi.string().required().valid(joi.ref("password")),
+		newPassword: joi.string().required(),
+		confirmPassword: joi.string().required().valid(joi.ref("newPassword")),
 	})
 	.required();
 

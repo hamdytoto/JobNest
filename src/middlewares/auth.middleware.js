@@ -20,8 +20,8 @@ const isAuthenticated = asyncHandler(async (req, res, next) => {
 	if (!user) {
 		return next(new Error("User Not Found", { cause: 403 }));
 	}
-	if (!user.isLoggedIn) {
-		return next(new Error("User Not Logged In", { cause: 403 }));
+	if (!user.isConfirmed) {
+		return next(new Error("Confirm at first and login", { cause: 403 }));
 	}
 	req.user = user;
 	return next();

@@ -92,7 +92,7 @@ export const login = async (req, res, next) => {
 	});
 };
 
-export const loginWithGoogle = async (req, res, next) => {
+export const loginWithGoogle = asyncHandler(async (req, res, next) => {
 	const { idToken } = req.body;
 	const client = new OAuth2Client();
 	async function verify() {
@@ -136,75 +136,98 @@ export const loginWithGoogle = async (req, res, next) => {
 		access_token,
 		refresh_token,
 	});
-};
+});
 
-// export const sendOtp = async (req, res, next) => {
-// 	const { email } = req.body;
-// 	// check user existance
-// 	const user = await User.findOne({ email });
-// 	if (user) return new Error("User already exist", { cause: 400 });
+export const forgetPassword = asyncHandler(async (req, res, next) => {
+	const { email } = req.body;
+	const user = await User.findOne({ email, isConfirmed: true, bannedAt: null });
+	if (!user) {
+		return next(new Error("User not found", { cause: 404 }));
+	} else if (user.bannedAt) {
+		return next(new Error("You are banned", { cause: 400 }));
+	}
+	user.OTP = user.OTP.filter((ele) => ele.type !== otpTypes.forgotPassword);
+	const otp = generateSecureOTP();
+	user.OTP.push({
+		code: hash({ plainText: otp }),
+		type: otpTypes.forgotPassword,
+		expiresIn: new Date(Date.now() + 10 * 60 * 1000),
+	});
+	await user.save();
+	resetPasswordEmitter.emit("sendOtp", email, otp, user.username);
+	return res
+		.status(200)
+		.json({ success: true, message: "otp send successfully" });
+});
 
-// 	const savedOtp = await Otp.create({
-// 		email,
-// 		otp: generateSecureOTP(),
-// 	});
-// 	emailEmitter.emit("sendOtp", email, savedOtp.otp);
-// 	return res.status(200).json({ success: true, results: savedOtp });
-// };
+export const resetPassword = asyncHandler(async (req, res, next) => {
+	const { email, otp, newPassword } = req.body;
 
-// export const forgetPassword = async (req, res, next) => {
-// 	const { email } = req.body;
-// 	const user = await User.findOne({ email, isAcctivated: true, freeze: false });
-// 	if (!user) {
-// 		return next(new Error("User not found", { cause: 404 }));
-// 	} else if (user.freeze) {
-// 		return next(new Error("Account deactive", { cause: 400 }));
-// 	}
-// 	const otp = generateSecureOTP();
-// 	await Otp.create({
-// 		email,
-// 		otp,
-// 	});
-// 	resetPasswordEmitter.emit("sendOtp", email, otp);
-// 	return res.status(200).json({ success: true, results: otp });
-// };
+	const user = await User.findOne({ email, isConfirmed: true, bannedAt: null });
+	if (!user) {
+		return next(new Error("User not found", { cause: 404 }));
+	}
 
-// export const resetPassword = async (req, res, next) => {
-// 	const { email, password, otp } = req.body;
-// 	const user = await User.findOne({ email, isAcctivated: true });
-// 	if (!user) {
-// 		return next(new Error("User not found", { cause: 404 }));
-// 	} else if (user.freeze) {
-// 		return next(new Error("Account deactive", { cause: 400 }));
-// 	}
-// 	const otpgiven = await Otp.findOne({ email, otp });
-// 	if (!otpgiven) {
-// 		return next(new Error("Invalid otp", { cause: 400 }));
-// 	}
-// 	user.password = password;
-// 	user.isLoggedIn = false;
-// 	await user.save();
-// 	return res
-// 		.status(200)
-// 		.json({ success: true, message: "Password updated successfully" });
-// };
+	const otpRecord = user.OTP.find((o) => o.type === otpTypes.forgotPassword);
+	if (!otpRecord) {
+		return next(new Error("OTP not found", { cause: 400 }));
+	}
 
-// //reques new acces token
-// export const refreshToken = async (req, res, next) => {
-// 	const { refresh_token } = req.body;
-// 	const payload = verifyToken({ token: refresh_token });
-// 	const user = await User.findById(payload.id);
-// 	if (!user) {
-// 		return next(new Error("User not found", { cause: 404 }));
-// 	}
-// 	return res.status(200).json({
-// 		success: "login success",
-// 		access_token: generateToken({
-// 			payload: {
-// 				id: user._id,
-// 				email: user.email,
-// 			},
-// 			options: { expiresIn: process.env.RXPIREEFRESH_TOKEN_EXPIRE },
-// 		}),
-// 	});
-// };
+	if (new Date() > otpRecord.expiresIn) {
+		await User.updateOne(
+			{ email },
+			{ $pull: { OTP: { type: otpTypes.forgotPassword } } }
+		);
+		return next(new Error("OTP has expired", { cause: 400 }));
+	}
+
+	if (!compareHash({ plainText: otp, hashText: otpRecord.code })) {
+		return next(new Error("Invalid OTP", { cause: 400 }));
+	}
+
+	await User.updateOne(
+		{ email },
+		{
+			$set: {
+				password: hash({ plainText: newPassword }),
+				changeCredentialTime: Date.now(),
+			},
+			$pull: { OTP: { type: otpTypes.forgotPassword } }, // Remove used OTP
+		}
+	);
+
+	return res
+		.status(200)
+		.json({ success: true, message: "Password reset successfully" });
+});
+
+// request new acces token
+export const refreshToken = asyncHandler(async (req, res, next) => {
+	const { refresh_token } = req.body;
+	const payload = verifyToken({ token: refresh_token });
+	const user = await User.findById(payload.id);
+	if (!user) {
+		return next(new Error("User not found", { cause: 404 }));
+	}
+	if (
+		user.changeCredentialTime &&
+		new Date(user.changeCredentialTime).getTime() > payload.iat * 1000
+	) {
+		return next(
+			new Error(
+				"Token expired due to credential change. Please log in again.",
+				{ cause: 403 }
+			)
+		);
+	}
+	return res.status(200).json({
+		success: " new refreshToken created sucessfully",
+		access_token: generateToken({
+			payload: {
+				id: user._id,
+				email: user.email,
+			},
+			options: { expiresIn: process.env.RXPIREEFRESH_TOKEN_EXPIRE },
+		}),
+	});
+});

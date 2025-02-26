@@ -1,4 +1,4 @@
-import { roles } from "../../DB/models/user.model.js"
+import { roles } from "../../DB/models/eumsValues/user.enum.js"
 const endPoints={
     profile:[roles.user,roles.admin],
     updateProfile:[roles.user],
