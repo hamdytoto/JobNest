@@ -11,59 +11,64 @@ import { generateToken, verifyToken } from "../../utils/token/token.js";
 import path from "path";
 import fs from "fs";
 import cloudinary from "../../utils/fileUploading/cloudinary.config.js";
+import { roles } from "../../DB/models/eumsValues/user.enum.js";
 
+// using  mongoose hooks in user model to decrypt mobileNumber
 export const profile = asyncHandler(async (req, res, next) => {
-	const { user } = req;
-	const decryptedPhone = decrypt({ cipherText: user.mobileNumber });
-	return res
-		.status(200)
-		.json({ success: true, result: { ...user ,mobileNumber: decryptedPhone }  });
+	const { _id } = req.user;
+	const user = await User.findById(_id);
+	return res.status(200).json({ success: true, result: user });
 });
 // update profile
 export const updateProfile = asyncHandler(async (req, res, next) => {
 	const { _id } = req.user;
-	if (req.body.phone) {
-		req.body.phone = encrypt({ plainText: req.body.phone });
-	}
-	const result = await User.findByIdAndUpdate(
-		_id,
-		{ ...req.body },
-		{ new: true, runValidators: true }
-	);
-	return res
-		.status(200)
-		.json({ success: true, message: "Profile updated successfully", result });
-});
-export const updateEmail = asyncHandler(async (req, res, next) => {
-	const { email, password } = req.body;
-	const user = await User.findOne(req.user._id);
+	const { firstName, lastName, gender, DOB, mobileNumber } = req.body;
+	const updateData = {};
 
-	if (!compareHash({ plainText: password, hashText: user.password })) {
-		return next(new Error("invalid password", { cause: 400 }));
+	// Check if request body is empty
+	if (Object.keys(req.body).length === 0) {
+		return next(new Error("No data to update", { cause: 400 }));
 	}
-	user.tempMail = email;
-	await user.save();
-	const token = generateToken({ payload: { email, id: user._id } });
-	const link = `http://localhost:3000/user/verify-email/${token}`;
-	emailEmitter.emit("verifyEmail", email, link, user.userName);
+
+	if (firstName) updateData.firstName = firstName;
+	if (lastName) updateData.lastName = lastName;
+	if (gender) updateData.gender = gender;
+	if (DOB) updateData.DOB = DOB;
+	if (mobileNumber) {
+		updateData.mobileNumber = encrypt({ plainText: mobileNumber });
+	}
+	const updatedUser = await User.findByIdAndUpdate(_id, updateData, {
+		new: true,
+		runValidators: true,
+	});
+
+	if (!updatedUser) {
+		return next(new Error("User not found", { cause: 404 }));
+	}
+
 	return res
 		.status(200)
-		.json({ success: true, message: "verification link sent" });
+		.json({ success: true, message: "Profile updated successfully" });
 });
-export const verifyEmail = asyncHandler(async (req, res, next) => {
-	const { token } = req.params;
-	const { email, id } = verifyToken({ token });
-	const user = await User.findById(id);
+
+export const profileUser = asyncHandler(async (req, res, next) => {
+	const { userId } = req.params;
+	const user = await User.findById(userId).select(
+		"username mobileNumber profilePic coverPic role -_id "
+	);
+	if (user.role === roles.admin) {
+		return next(new Error("You can't view this user profile", { cause: 403 }));
+	}
+
 	if (!user) {
-		return next(new Error("invalid user", { cause: 400 }));
+		return next(new Error("User not found", { cause: 404 }));
 	}
-	user.email = user.tempMail;
-	user.tempMail = null;
-	await user.save();
-	return res
-		.status(200)
-		.json({ success: true, message: "Email verified successfully" });
+	return res.status(200).json({
+		success: true,
+		data: user,
+	});
 });
+
 
 // update password
 export const updatePassword = asyncHandler(async (req, res, next) => {
@@ -73,10 +78,9 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
 	if (!compareHash({ plainText: oldPassword, hashText: user.password })) {
 		return next(new Error("invalid old password", { cause: 400 }));
 	}
-	user.password = hash({ plainText: newPassword });
-	user.isLoggedIn = false;
+	user.password = newPassword;
+	user.changeCredentialTime = new Date();
 	await user.save();
-
 	return res
 		.status(200)
 		.json({ success: true, message: "Password updated successfully" });
@@ -98,47 +102,7 @@ export const deactiveAccount = asyncHandler(async (req, res, next) => {
 		.json({ success: true, message: "Account deactive successfully" });
 });
 
-export const forgetPassword = asyncHandler(async (req, res, next) => {
-	const { email } = req.body;
-	const user = await User.findOne({ email });
-	if (!user) {
-		return next(new Error("User not found", { cause: 404 }));
-	}
 
-	const otp = generateSecureOTP();
-	resetPasswordEmitter.emit("sendOtp", email, otp);
-
-	user.otp = hash({ plainText: otp });
-	user.otpExiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-	await user.save();
-
-	return res
-		.status(200)
-		.json({ success: true, message: "Password reset email sent successfully" });
-});
-
-export const resetPassword = asyncHandler(async (req, res, next) => {
-	const { newPassword, email, otp } = req.body;
-	const user = await User.findOne({ email });
-	if (!user) {
-		return next(new Error("User not found", { cause: 404 }));
-	}
-	if (!compareHash({ plainText: otp, hashText: user.otp })) {
-		return next(new Error("invalid otp", { cause: 400 }));
-	}
-	if (Date.now() > user.otpExiry) {
-		return next(new Error("otp expired", { cause: 400 }));
-	}
-
-	user.password = hash({ plainText: newPassword });
-	user.isLoggedIn = false;
-	user.otp = null;
-	user.otpExiry = null;
-	await user.save();
-	return res
-		.status(200)
-		.json({ success: true, message: "Password reset successfully" });
-});
 
 export const ProfilePicture = asyncHandler(async (req, res, next) => {
 	const user = await User.findByIdAndUpdate(

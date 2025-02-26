@@ -22,24 +22,24 @@ router.get(
 
 // update profile
 router.patch(
-	"/updateProfile",
+	"/update_profile",
 	isAuthenticated,
 	isAuthrized(...endPoints.updateProfile),
 	validation(userValidation.updateProfile),
 	userServices.updateProfile
 );
-router.get("/verify-email/:token", userServices.verifyEmail);
-// upddate Email
-router.patch(
-	"/update-email",
+// show profile anthor user
+router.get(
+	"/profile_user/:userId",
 	isAuthenticated,
-	isAuthrized(...endPoints.updateEmail),
-	validation(userValidation.updateEmail),
-	userServices.updateEmail
+	isAuthrized(...endPoints.profileUser),
+	validation(userValidation.profileUser),
+	userServices.profileUser
 );
+
 // update password
 router.patch(
-	"/updatePassword",
+	"/update_password",
 	isAuthenticated,
 	isAuthrized(...endPoints.updatePassword),
 	validation(userValidation.updatePassword),
@@ -54,23 +54,6 @@ router.delete(
 	userServices.deactiveAccount
 );
 
-// forget password
-router.post(
-	"/forgetPassword",
-	isAuthenticated,
-	isAuthrized(...endPoints.forgotPassword),
-	validation(userValidation.forgetPassword),
-	userServices.forgetPassword
-);
-
-// reset password
-router.post(
-	"/resetPassword/",
-	isAuthenticated,
-	isAuthrized(...endPoints.resetPassword),
-	validation(userValidation.resetPassword),
-	userServices.resetPassword
-);
 
 // add profile picture
 router.post(

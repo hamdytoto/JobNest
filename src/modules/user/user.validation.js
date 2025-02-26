@@ -1,13 +1,20 @@
 import joi from "joi";
 import { isvalidObjectId } from "../../middlewares/validation.middleware.js";
+import { genders } from "../../DB/models/eumsValues/user.enum.js";
 export const updateProfile = joi
 	.object({
-		userName: joi.string().min(5).max(20),
-		phone: joi.string().required(),
-		email: joi.string().email(),
+		firstName: joi.string().min(3).max(20),
+		lastName: joi.string().min(3).max(20),
+		DOB: joi.date(),
+		gender: joi.string().valid(...Object.values(genders)),
+		mobileNumber: joi.string().regex(/^01[0-2,5]{1}[0-9]{8}$/),
+		//  mobileNumber, DOB ,firstName, lastName, Gender
 	})
 	.required();
 
+export const profileUser = joi.object({
+	userId: joi.custom(isvalidObjectId).required(),
+});
 export const updatePassword = joi
 	.object({
 		oldPassword: joi.string().required(),
@@ -27,26 +34,3 @@ export const deactiveAccount = joi
 		password: joi.string().required(),
 	})
 	.required();
-
-export const forgetPassword = joi
-	.object({
-		email: joi.string().email().required(),
-	})
-	.required();
-
-export const resetPassword = joi
-	.object({
-		email: joi.string().email().required(),
-		otp: joi.string().required().max(6).min(6),
-		newPassword: joi.string().required(),
-	})
-	.required();
-
-export const updateEmail = joi
-	.object({
-		email: joi.string().email().required(),
-		password: joi.string().required(),
-	})
-	.required();
-
-	

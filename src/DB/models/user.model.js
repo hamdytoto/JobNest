@@ -58,12 +58,12 @@ const userSchema = new Schema(
 			},
 		],
 	},
-	{ timestamps: true, toJSon: { virtuals: true }, toObject: { virtuals: true } }
+	{ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Virtual field for username
 userSchema.virtual("username").get(function () {
-	return `${this.firstName} ${this.lastName}`;
+	return `${this.firstName || ""}${this.lastName || ""}`.trim();
 });
 
 // Hash password before saving
@@ -75,6 +75,15 @@ userSchema.pre("save", function (next) {
 		this.mobileNumber = encrypt({ plainText: this.mobileNumber });
 	}
 	return next();
+});
+
+userSchema.set("toJSON", {
+	transform: function (doc, ret) {
+		if (ret.mobileNumber) {
+			ret.mobileNumber = decrypt({ cipherText: ret.mobileNumber }); // Decrypt before sending response
+		}
+		return ret;
+	},
 });
 
 const User = model("User", userSchema);
