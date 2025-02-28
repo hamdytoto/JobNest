@@ -12,6 +12,7 @@ import {
 } from "./admin.services.js";
 import validation from "../../middlewares/validation.middleware.js";
 import * as adminValidation from "../admin/admin.validation.js";
+import { generateApplicationsReport } from "../../utils/reports/generateReport.js";
 const router = Router();
 router.use(
 	"/graphql",
@@ -53,5 +54,11 @@ router.put(
 	validation(adminValidation.approveCompany),
 	approveCompany
 );
-
+router.get(
+	"/application_report/:companyId/:date",
+	// isAuthenticated,
+	// isAdmin,
+	validation(adminValidation.generateApplicationsReport),
+	generateApplicationsReport
+);
 export default router;
