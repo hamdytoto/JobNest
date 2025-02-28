@@ -1,5 +1,5 @@
 import { Types, Schema, model } from "mongoose";
-import {numberOfEmployees} from "./eumsValues/company.enum.js"
+import { numberOfEmployees } from "./eumsValues/company.enum.js";
 const companySchema = new Schema(
 	{
 		companyName: { type: String, required: true, unique: true },
@@ -35,14 +35,13 @@ const companySchema = new Schema(
 		},
 		approvedByAdmin: { type: Boolean, default: false },
 	},
-	{ timestamps: true }
+	{ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 companySchema.virtual("jobs", {
-    ref: "Job",
-    localField: "_id",
-    foreignField: "companyId"
+	ref: "Job",
+	localField: "_id",
+	foreignField: "companyId",
 });
-
 
 const Company = model("Company", companySchema);
 export default Company;

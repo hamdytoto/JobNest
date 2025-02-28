@@ -1,73 +1,79 @@
 import { Router } from "express";
 import isAuthenticated from "../../middlewares/auth.middleware.js";
 import isAuthrized from "../../middlewares/authrazation.middleware.js";
-import endPoints from "../post/post.endPoints.js";
+import endPoints from "../job/job.endPoints.js";
 import { cloudUpload } from "../../utils/fileUploading/cloud.multer.js";
-import * as postServices from "./job.services.js";
-import * as postValidation from "./job.validation.js";
+import * as jobServices from "./job.services.js";
+import * as jobValidation from "./job.validation.js";
 import validation from "../../middlewares/validation.middleware.js";
-import commentRouter from "../comment/comment.controller.js";
 
-const router = Router();
-router.use("/:postId/comment", commentRouter); // redirect to comment router
-// create Post
+const router = Router({ mergeParams: true });
+// create job
 router.post(
-	"/",
+	"/add",
 	isAuthenticated,
-	isAuthrized(...endPoints.createPost),
-	cloudUpload().array("images"),
-	validation(postValidation.createPost),
-	postServices.createPost
+	isAuthrized(...endPoints.createJob),
+	validation(jobValidation.createJob),
+	jobServices.createJob
 );
+// update job
 router.patch(
-	"/:id",
+	"/:id/update",
 	isAuthenticated,
-	isAuthrized(...endPoints.updatePost),
-	cloudUpload().array("images"),
-	validation(postValidation.updatePost),
-	postServices.updatePost
+	isAuthrized(...endPoints.updateJob),
+	validation(jobValidation.updateJob),
+	jobServices.updateJob
 );
 router.delete(
-	"/:id/freeze",
+	"/:id/delete",
 	isAuthenticated,
-	isAuthrized(...endPoints.SoftDeletePost),
-	validation(postValidation.SoftDeletePost),
-	postServices.SoftDeletePost
-);
-router.patch(
-	"/:id/restore",
-	isAuthenticated,
-	isAuthrized(...endPoints.restorePost),
-	validation(postValidation.restorePost),
-	postServices.restorePost
+	isAuthrized(...endPoints.deleteJob),
+	validation(jobValidation.deleteJob),
+	jobServices.deleteJob
 );
 router.get(
-	"/:id",
+	"/all/:jobId?", /// merging params   ?mark make it optional
 	isAuthenticated,
-	isAuthrized(...endPoints.getSinglePost),
-	validation(postValidation.getSinglePost),
-	postServices.getSinglePost
-);
-router.get(
-	"/all/activeposts",
-	isAuthenticated,
-	isAuthrized(...endPoints.getActivePosts),
-	postServices.getActivePosts
-);
-router.get(
-	"/all/archivedposts",
-	isAuthenticated,
-	isAuthrized(...endPoints.archivedPosts),
-	postServices.archivedPosts
+	isAuthrized(...endPoints.getJobs),
+	validation(jobValidation.getJobs),
+	jobServices.getJobs
 );
 
-// like,unlike
-router.patch(
-	"/:id/like-unlike",
+// get filtered jobs
+router.get(
+	"/filter",
 	isAuthenticated,
-	isAuthrized(...endPoints.likeUnlikePost),
-	validation(postValidation.likeUnlikePost),
-	postServices.likeUnlikePost
+	isAuthrized(...endPoints.getFilteredJobs),
+	jobServices.getFilteredJobs
 );
+
+// get job applications
+router.get(
+	"/applications/:jobId",
+	isAuthenticated,
+	isAuthrized(...endPoints.getJobApplications),
+	validation(jobValidation.getJobApplications),
+	jobServices.getJobApplications
+);
+
+// apply for job 
+router.post(
+	"/apply/:jobId",
+	isAuthenticated,
+	isAuthrized(...endPoints.applyForJob),
+	cloudUpload().single("userCv"),
+	validation(jobValidation.applyForJob),
+	jobServices.applyForJob	
+)
+
+// accept or reject application
+router.patch(
+	"/applications/:jobId/:applicationId",
+	isAuthenticated,
+	isAuthrized(...endPoints.acceptOrRejectApplication),
+	validation(jobValidation.acceptOrRejectApplication),
+	jobServices.acceptOrRejectApplicant
+)
+
 
 export default router;

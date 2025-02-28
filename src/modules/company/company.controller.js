@@ -6,7 +6,8 @@ import * as companyValidation from "./company.validation.js";
 import { cloudUpload } from "../../utils/fileUploading/cloud.multer.js";
 import validation from "../../middlewares/validation.middleware.js";
 import companyEndPoint from "./company.endpoint.js";
-const router = Router({ mergeParams: true });
+import jobRouter from "../job/job.controller.js"
+const router = Router();
 router.post(
 	"/add",
 	isAuthenticated,
@@ -37,6 +38,9 @@ router.get(
 	validation(companyValidation.getCompany),
 	companyServices.getCompanyWithJobs
 );
+
+router.use("/:companyId",jobRouter)    ///  merge params
+
 router.get(
 	"/search",
 	isAuthenticated,

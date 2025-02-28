@@ -1,5 +1,5 @@
 import { Types, Schema, model } from "mongoose";
-import { status } from "./eumsValues/application.enum.js";
+import { statusTypes } from "./eumsValues/application.enum.js";
 
 const applicationSchema = new Schema(
 	{
@@ -11,7 +11,7 @@ const applicationSchema = new Schema(
 		},
 		status: {
 			type: String,
-			enum: Object.values(status),
+			enum: Object.values(statusTypes),
 			default: "pending",
 		},
 	},

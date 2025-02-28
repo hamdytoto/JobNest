@@ -8,6 +8,7 @@ export const subjects = {
 	registerOtp: "register otp",
 	resetPassword: "reset password",
 	changeEmail: "change email",
+	applictionResult:"application result"
 };
 const sendEmail = async ({ to, subject, html }) => {
 	const transporter = nodemailer.createTransport({

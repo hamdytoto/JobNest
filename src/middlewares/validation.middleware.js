@@ -25,7 +25,7 @@ export const isvalidObjectId = (value, helper) => {
 };
 
 export const fileObject = {
-	fieldname: joi.string().valid("images","attachment","image").required(),
+	fieldname: joi.string().valid("images","attachment","image","userCv").required(),
 	originalname: joi.string().required(),
 	encoding: joi.string().required(),
 	mimetype: joi.string().required(),

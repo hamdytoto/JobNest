@@ -3,31 +3,73 @@ import {
 	fileObject,
 	isvalidObjectId,
 } from "../../middlewares/validation.middleware.js";
+import {
+	joblocation,
+	senioritylevel,
+	workingtime,
+} from "../../DB/models/eumsValues/job.enum.js";
+import { statusTypes } from "../../DB/models/eumsValues/application.enum.js";
 
-export const createPost = joi
-	.object({
-		text: joi.string().min(3).max(1000),
-		file: joi.array().items(joi.object(fileObject)),
-	})
-	.or("text", "file");
+export const createJob = joi.object({
+	jobTitle: joi.string().required(),
+	jobLocation: joi
+		.string()
+		.valid(...Object.values(joblocation))
+		.required(),
+	workingTime: joi
+		.string()
+		.valid(...Object.values(workingtime))
+		.required(),
+	seniorityLevel: joi
+		.string()
+		.valid(...Object.values(senioritylevel))
+		.required(),
+	jobDescription: joi.string().required(),
+	technicalSkills: joi.array().items(joi.string()).required(),
+	softSkills: joi.array().items(joi.string()).required(),
+	companyId: joi.custom(isvalidObjectId).required(),
+});
 
-export const updatePost = joi.object({
-		id: joi.custom(isvalidObjectId).required(),
-		text: joi.string().min(3).max(1000),
-		file: joi.array().items(joi.object(fileObject)),
-	})
-	.or("text", "file");
+export const updateJob = joi.object({
+	id: joi.custom(isvalidObjectId).required(),
+	jobTitle: joi.string().required(),
+	jobLocation: joi
+		.string()
+		.valid(...Object.values(joblocation))
+		.required(),
+	workingTime: joi
+		.string()
+		.valid(...Object.values(workingtime))
+		.required(),
+	seniorityLevel: joi
+		.string()
+		.valid(...Object.values(senioritylevel))
+		.required(),
+	jobDescription: joi.string().required(),
+	technicalSkills: joi.array().items(joi.string()).required(),
+	softSkills: joi.array().items(joi.string()).required(),
+});
 
-export const SoftDeletePost = joi.object({
+export const deleteJob = joi.object({
 	id: joi.custom(isvalidObjectId).required(),
 });
-export const restorePost = joi.object({
-	id: joi.custom(isvalidObjectId).required(),
+export const getJobs = joi.object({
+	companyId: joi.custom(isvalidObjectId).required(),
+	jobId: joi.custom(isvalidObjectId).optional(),
 });
 
-export const getSinglePost = joi.object({
-	id: joi.custom(isvalidObjectId).required(),
+export const applyForJob = joi.object({
+	jobId: joi.custom(isvalidObjectId).required(),
+	file: joi.object(fileObject).required(),
 });
-export const likeUnlikePost = joi.object({
-	id: joi.custom(isvalidObjectId).required(),
+export const getJobApplications = joi.object({
+	jobId: joi.custom(isvalidObjectId).required(),
+});
+export const acceptOrRejectApplication = joi.object({
+	applicationId: joi.custom(isvalidObjectId).required(),
+	jobId: joi.custom(isvalidObjectId).required(),
+	status: joi
+		.string()
+		.valid(statusTypes.accepted, statusTypes.rejected)
+		.required(),
 });
