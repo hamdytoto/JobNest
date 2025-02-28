@@ -56,8 +56,8 @@ router.put(
 );
 router.get(
 	"/application_report/:companyId/:date",
-	// isAuthenticated,
-	// isAdmin,
+	isAuthenticated,
+	isAdmin,
 	validation(adminValidation.generateApplicationsReport),
 	generateApplicationsReport
 );
