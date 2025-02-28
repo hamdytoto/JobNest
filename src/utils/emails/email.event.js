@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { subjects } from "./sendEmail.js";
 import { changeEmail, signup } from "./templates/generateHtml.js";
 import sendEmail from "./sendEmail.js";
-import { otpForm } from "./htmlOtp.js";
+import { otpForm } from "./templates/htmlOtp.js";
 import  getApplicationEmailTemplate  from "./templates/acccetOrReject.js";
 
 export const emailEmitter = new EventEmitter();

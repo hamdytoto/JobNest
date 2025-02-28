@@ -7,6 +7,7 @@ import authRouter from "./modules/auth/auth.controller.js";
 import userRouter from "./modules/user/user.controller.js"
 import jobRouter from "./modules/job/job.controller.js"
 import companyRouter from "./modules/company/company.controller.js"
+import adminRouter from "./modules/admin/admin.controller.js"
 const bootstrap = async(app,express) =>{
     await connectDB();
     app.use(morgan("dev"));
@@ -16,6 +17,7 @@ const bootstrap = async(app,express) =>{
     app.use("/v1/user",userRouter)
     app.use("/v1/company",companyRouter)
     app.use("/v1/job",jobRouter)
+    app.use("/v1/admin",adminRouter)
     app.all("*", notFoundHandler);
     app.use(globalErrorHandler);
 
