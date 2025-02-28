@@ -37,6 +37,12 @@ const companySchema = new Schema(
 	},
 	{ timestamps: true }
 );
+companySchema.virtual("jobs", {
+    ref: "Job",
+    localField: "_id",
+    foreignField: "companyId"
+});
+
 
 const Company = model("Company", companySchema);
 export default Company;

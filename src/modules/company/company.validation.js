@@ -3,44 +3,59 @@ import {
 	fileObject,
 	isvalidObjectId,
 } from "../../middlewares/validation.middleware.js";
-export const createComment = joi
+import { numberOfEmployees } from "../../DB/models/eumsValues/company.enum.js";
+export const createCompany = joi
 	.object({
-		postId: joi.custom(isvalidObjectId).required(),
-		text: joi.string(),
-		file: joi.object(fileObject),
+		companyName: joi.string().required().max(10),
+		description: joi.string().required(),
+		industry: joi.string().required(),
+		address: joi.string().required(),
+		numberOfEmployees: joi
+			.string()
+			.required()
+			.valid(...Object.values(numberOfEmployees)),
+		companyEmail: joi.string().required().email(),
+		file: joi.object(fileObject).optional(),
+		// legalAttachment:joi.object(fileObject).optional(),
 	})
-	.or("text", "file")
 	.required();
 
-export const updateComment = joi
+export const updateCompany = joi
 	.object({
-		commentId: joi.custom(isvalidObjectId).required(),
-		text: joi.string().required(),
-		file: joi.object(fileObject),
+		id: joi.custom(isvalidObjectId).required(),
+		companyName: joi.string().required().max(10),
+		description: joi.string().required(),
+		industry: joi.string().required(),
+		address: joi.string().required(),
+		numberOfEmployees: joi
+			.string()
+			.required()
+			.valid(...Object.values(numberOfEmployees)),
+		companyEmail: joi.string().required().email(),
+		file: joi.object(fileObject).optional(),
 	})
-	.or("text", "file")
 	.required();
 
+export const searchCompany = joi.object({
+	name: joi.string().required(),
+});
 
-
+/////
 const genericFunc = (key) => {
 	return joi.object({
 		[key]: joi.custom(isvalidObjectId).required(),
 	});
 };
-export const deleteComment = genericFunc("commentId");
-export const getComments = genericFunc("postId");
-export const likeUnlikeComment = genericFunc("commentId");
+export const deleteCompany = genericFunc("id");
+export const getCompany = genericFunc("id");
 
-export const replyComment = joi.object({
-	commentId: joi.custom(isvalidObjectId).required(),
-	text: joi.string().required(),
-	file: joi.object(fileObject),
-	postId: joi.custom(isvalidObjectId).required(),
-}).or("text", "file");
-// export const likeUnlikeComment = genericFunc("commentId");
-
-export const hardDelete = joi.object({
-	commentId: joi.custom(isvalidObjectId).required(),
-	postId: joi.custom(isvalidObjectId).required(),
-}).required();
+const genericFunc2 = (key) => {
+	return joi.object({
+		[key]: joi.custom(isvalidObjectId).required(),
+		file: joi.object(fileObject).required(),
+	});
+};
+export const uploadLogo = genericFunc2("id");
+export const uploadCover = genericFunc2("id");
+export const deleteLogo = genericFunc("id");
+export const deleteCover = genericFunc("id");

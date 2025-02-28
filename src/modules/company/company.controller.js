@@ -1,64 +1,84 @@
 import { Router } from "express";
 import isAuthenticated from "../../middlewares/auth.middleware.js";
 import isAuthrized from "../../middlewares/authrazation.middleware.js";
-import * as commentServices from "./company.services.js";
-import * as commentValidation from "./company.validation.js";
+import * as companyServices from "./company.services.js";
+import * as companyValidation from "./company.validation.js";
 import { cloudUpload } from "../../utils/fileUploading/cloud.multer.js";
 import validation from "../../middlewares/validation.middleware.js";
-import commentEndPoint from "./company.endpoint.js";
+import companyEndPoint from "./company.endpoint.js";
 const router = Router({ mergeParams: true });
 router.post(
-	"/",
+	"/add",
 	isAuthenticated,
-	isAuthrized(...commentEndPoint.createComment),
-	cloudUpload().single("images"),
-	validation(commentValidation.createComment),
-	commentServices.createComment
+	isAuthrized(...companyEndPoint.createCompany),
+	cloudUpload().single("attachment"),
+	validation(companyValidation.createCompany),
+	companyServices.createCompany
 );
 router.patch(
-	"/:commentId",
+	"/update/:id",
 	isAuthenticated,
-	isAuthrized(...commentEndPoint.updateComment),
-	cloudUpload().single("images"),
-	validation(commentValidation.updateComment),
-	commentServices.updateComment
+	isAuthrized(...companyEndPoint.updateCompany),
+	cloudUpload().single("attachment"),
+	validation(companyValidation.updateCompany),
+	companyServices.updateCompany
 );
 router.delete(
-	"/:commentId",
+	"/:id",
 	isAuthenticated,
-	isAuthrized(...commentEndPoint.deleteComment),
-	validation(commentValidation.deleteComment),
-	commentServices.deleteComment
+	isAuthrized(...companyEndPoint.deleteCompany),
+	validation(companyValidation.deleteCompany),
+	companyServices.softDeleteCompany
 );
 router.get(
-	"/:postId/comments",
+	"/:id/jobs",
 	isAuthenticated,
-	isAuthrized(...commentEndPoint.getComments),
-	validation(commentValidation.getComments),
-	commentServices.getComments
+	isAuthrized(...companyEndPoint.getCompany),
+	validation(companyValidation.getCompany),
+	companyServices.getCompanyWithJobs
+);
+router.get(
+	"/search",
+	isAuthenticated,
+	isAuthrized(...companyEndPoint.serachCompany),
+	validation(companyValidation.searchCompany),
+	companyServices.searchCompanyByName
+);
+// uploadlogo
+router.post(
+	"/:id/logo",
+	isAuthenticated,
+	isAuthrized(...companyEndPoint.uploadLogo),
+	cloudUpload().single("image"),
+	validation(companyValidation.uploadLogo),
+	companyServices.uploadLogo
 );
 router.post(
-	"/like-unlike/:commentId",
+	"/:id/cover-pic",
 	isAuthenticated,
-	isAuthrized(...commentEndPoint.likeUnlikeComment),
-	validation(commentValidation.likeUnlikeComment),
-	commentServices.likeUnlikeComment
-);
-router.post(
-	"/:postId/comment/:commentId",
-	isAuthenticated,
-	isAuthrized(...commentEndPoint.replyComment),
-	cloudUpload().single("images"),
-	validation(commentValidation.replyComment),
-	commentServices.addReply
+	isAuthrized(...companyEndPoint.uploadCover),
+	cloudUpload().single("image"),
+	validation(companyValidation.uploadCover),
+	companyServices.uploadCover
 );
 
+// delete logo
 router.delete(
-	"/:postId/comment/:commentId",
-isAuthenticated,
-isAuthrized(...commentEndPoint.hardDelete),
-validation(commentValidation.hardDelete),
-commentServices.hardDelete
-);
+	"/:id/logo",
+	isAuthenticated,
+	isAuthrized(...companyEndPoint.deleteLogo),
+	validation(companyValidation.deleteLogo),
+	companyServices.deleteLogo
+)
+
+// delete cover
+router.delete(
+	"/:id/cover-pic",
+	isAuthenticated,
+	isAuthrized(...companyEndPoint.deleteCover),
+	validation(companyValidation.deleteCover),
+	companyServices.deleteCover
+)	
+
 
 export default router;

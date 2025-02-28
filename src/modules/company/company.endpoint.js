@@ -1,12 +1,14 @@
-import { roles } from "../../DB/models/user.model.js";
+import { roles } from "../../DB/models/eumsValues/user.enum.js";
 
- const commentEndPoint = {
-    createComment:[roles.user],
-    updateComment:[roles.user],
-    deleteComment:[roles.user,roles.admin],
-    getComments:[roles.user],
-    likeUnlikeComment:[roles.user],
-    replyComment:[roles.user],
-    hardDelete:[roles.admin,roles.user]
+ const companyEndPoint = {
+    createCompany:[roles.user,roles.admin],
+    updateCompany:[roles.user],
+    deleteCompany:[roles.user,roles.admin],
+    getCompany:[roles.user],
+    serachCompany:[roles.user],
+    uploadLogo:[roles.user],
+    uploadCover:[roles.user],
+    deleteLogo:[roles.user],
+    deleteCover:[roles.user]
 }
-export default commentEndPoint;
+export default companyEndPoint;
