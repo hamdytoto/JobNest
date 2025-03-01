@@ -13,6 +13,7 @@ import {
 import validation from "../../middlewares/validation.middleware.js";
 import * as adminValidation from "../admin/admin.validation.js";
 import { generateApplicationsReport } from "../../utils/reports/generateReport.js";
+import apiLimiter from "../../middlewares/rateLimter.middleware.js";
 const router = Router();
 router.use(
 	"/graphql",
@@ -56,6 +57,7 @@ router.put(
 );
 router.get(
 	"/application_report/:companyId/:date",
+	apiLimiter,
 	isAuthenticated,
 	isAdmin,
 	validation(adminValidation.generateApplicationsReport),
