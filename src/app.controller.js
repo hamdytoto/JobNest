@@ -8,10 +8,12 @@ import userRouter from "./modules/user/user.controller.js"
 import jobRouter from "./modules/job/job.controller.js"
 import companyRouter from "./modules/company/company.controller.js"
 import adminRouter from "./modules/admin/admin.controller.js"
+import { allowed } from "./middlewares/cors.middleware.js";
 const bootstrap = async(app,express) =>{
     await connectDB();
-    app.use(morgan("dev"));
     app.use(cors());
+    app.use(allowed)
+    app.use(morgan("dev"));
     app.use(express.json());
     app.use("/v1/auth",authRouter)
     app.use("/v1/user",userRouter)
