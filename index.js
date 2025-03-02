@@ -7,15 +7,26 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 bootstrap(app, express);
-const server = app.listen(port, () => {
+export const server = app.listen(port, () => {
 	console.log(
 		chalk.red.bgGreen.underline.bold(`Example app listening on port ${port}!`)
 	);
 });
 
 // Socket Connection 
-const io = new Server(server, {
-	cors: {
-		origin: "*",
-	},
-});
+// const io = new Server(server, {
+// 	cors: {
+// 		origin: "*",
+// 	},
+// });
+// io.on("connection", (socket) => {
+// 	console.log(socket.id);
+// 	console.log("a user connected");
+// 	io.emit("products",[{name:"Product 1",price:10},{name:"Product 2",price:20}]);
+
+// 	socket.on("cars",(data)=>{
+// 		console.log(data);
+// 	})
+// })
+
+
